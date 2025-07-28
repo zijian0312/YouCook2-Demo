@@ -1,1 +1,473 @@
-<h1>hello</h1>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouCook2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .filters {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* Align items vertically */
+        }
+
+        .filters select,
+        .filters button {
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-right: 10px; /* Add some spacing */
+        }
+
+        .video-container {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow-x: auto; /* Prevent horizontal overflow for smaller screens */
+        }
+
+        table {
+            width: 100%; /* 表格总宽度100% */
+            border-collapse: collapse;
+            table-layout: fixed; /* 强制表格列宽按照设定来 */
+        }
+
+        table th,
+        table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+            vertical-align: top; /* 垂直向上对齐 */
+            word-wrap: break-word; /* 允许长单词或URL自动换行 */
+            box-sizing: border-box; /* 确保 width 包含 padding 和 border */
+        }
+
+        table th {
+            background-color: #f0f0f0;
+        }
+
+        /* 设置每列的宽度为百分比 */
+        table th:nth-child(1), /* 视频 ID */
+        table td:nth-child(1) {
+            width: 5%;
+        }
+
+      
+        table th:nth-child(2), /* 截图列 - 保持 50% 宽度 */
+        table td:nth-child(2) {
+            width: 60%;
+        }
+
+      
+        table th:nth-child(3), /* 描述 */
+        table td:nth-child(3) {
+            width: 25%;
+        }
+
+
+
+        #video-table td.images-cell img {
+            width: calc((100% / 4) - 4px); /* (100% / 6) 减去左右 margin 总和 (2px * 2) */
+            height: auto;
+            object-fit: cover;
+            cursor: pointer;
+            margin: 2px; /* 图片之间的间距 */
+            border: 1px solid #eee;
+            flex-shrink: 0; /* Prevent images from shrinking */
+        }
+
+
+        /* Pagination Styles */
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .pagination-controls input[type="number"] {
+            width: 50px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+            margin: 0 5px;
+        }
+
+        .pagination-controls select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin: 0 10px;
+        }
+
+        .pagination-controls span {
+            margin: 0 5px;
+            color: #555;
+        }
+
+        .pagination-controls .page-info {
+            margin-right: 20px;
+            font-size: 14px;
+        }
+
+        .pagination-controls .item-per-page-info {
+            margin-left: 20px;
+        }
+
+        .pagination-buttons {
+            display: flex;
+            align-items: center;
+        }
+
+        .pagination-buttons button {
+            padding: 8px 12px;
+            margin: 0 2px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .pagination-buttons button:hover:not(:disabled) {
+            background-color: #e0e0e0;
+        }
+
+        .pagination-buttons button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .pagination-buttons button.active-page {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000; /* Ensure it's on top */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: auto; /* Allow scrolling for large images */
+            position: relative; /* For close button positioning */
+            border-radius: 8px;
+        }
+
+        .modal-content img {
+            display: block; /* Remove extra space below image */
+            max-width: 100%;
+            height: auto;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 30px;
+            color: #fff; /* White close button */
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5); /* Add shadow for visibility */
+        }
+    </style>
+</head>
+<body>
+
+    <h1>YouCook2</h1>
+
+    <div class="filters">
+        <div>
+            <label for="typeFilter">类型:</label>
+            <select id="typeFilter">
+                <option value="">所有类型</option>
+                </select>
+
+            <label for="subtypeFilter">子类型:</label>
+            <select id="subtypeFilter">
+                <option value="">所有子类型</option>
+                </select>
+
+            <button onclick="applyFilters()">应用筛选</button>
+        </div>
+    </div>
+
+    <div class="video-container">
+        <table id="video-table">
+            <thead>
+                <tr>
+                    <th>视频 ID</th>
+                    <th>截图</th>
+                    <th>描述</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+
+    <div class="pagination-controls">
+        <span class="page-info">前往 <input type="number" id="gotoPageInput" value="1" min="1"> 页</span>
+        <span class="page-info">共 <span id="totalPages"></span> 页</span>
+        <span class="page-info">共 <span id="totalItems"></span> 条</span>
+        <select id="itemsPerPageSelect">
+            <option value="10">10条/页</option>
+            <option value="20" selected>20条/页</option>
+            <option value="50">50条/页</option>
+            <option value="100">100条/页</option>
+        </select>
+        <div class="pagination-buttons">
+            <button id="prevPageBtn" onclick="prevPage()">&lt;</button>
+            <span id="pageNumbers">
+                </span>
+            <button id="nextPageBtn" onclick="nextPage()">&gt;</button>
+        </div>
+    </div>
+
+    <div class="modal" id="imageModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <img id="modalImage" src="" alt="放大图">
+        </div>
+    </div>
+
+    <script>
+        let videoData = []; // This will hold the loaded data from the JSON file
+        let currentPage = 1;
+        let itemsPerPage = parseInt(document.getElementById("itemsPerPageSelect").value);
+        let currentFilteredVideos = [];
+
+        // Get DOM elements
+        const videoTableBody = document.getElementById("video-table").getElementsByTagName('tbody')[0];
+        const totalPagesSpan = document.getElementById("totalPages");
+        const totalItemsSpan = document.getElementById("totalItems");
+        const gotoPageInput = document.getElementById("gotoPageInput");
+        const itemsPerPageSelect = document.getElementById("itemsPerPageSelect");
+        const prevPageBtn = document.getElementById("prevPageBtn");
+        const nextPageBtn = document.getElementById("nextPageBtn");
+        const pageNumbersSpan = document.getElementById("pageNumbers");
+        const typeFilterSelect = document.getElementById("typeFilter");
+        const subtypeFilterSelect = document.getElementById("subtypeFilter");
+
+
+        // --- Functions for filter population ---
+        function populateFilters() {
+            const types = new Set();
+            const subtypes = new Set();
+
+            videoData.forEach(video => {
+                types.add(video.type);
+                subtypes.add(video.subtype);
+            });
+
+            // Populate Type filter
+            typeFilterSelect.innerHTML = '<option value="">所有类型</option>';
+            types.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                typeFilterSelect.appendChild(option);
+            });
+
+            // Populate Subtype filter (initially with all subtypes from all types)
+            subtypeFilterSelect.innerHTML = '<option value="">所有子类型</option>';
+            subtypes.forEach(subtype => {
+                const option = document.createElement('option');
+                option.value = subtype;
+                option.textContent = subtype;
+                subtypeFilterSelect.appendChild(option);
+            });
+        }
+
+        // --- Event listeners ---
+        itemsPerPageSelect.addEventListener("change", (event) => {
+            itemsPerPage = parseInt(event.target.value);
+            applyFilters(); // Re-apply filters and re-render with new items per page
+        });
+
+        gotoPageInput.addEventListener("keypress", (event) => {
+            if (event.key === "Enter") {
+                let page = parseInt(gotoPageInput.value);
+                const totalPages = Math.ceil(currentFilteredVideos.length / itemsPerPage);
+                if (page >= 1 && page <= totalPages) {
+                    goToPage(page);
+                } else {
+                    alert(`请输入1到${totalPages}之间的页码。`);
+                    gotoPageInput.value = currentPage; // Reset input to current page
+                }
+            }
+        });
+
+        // --- Render functions ---
+        function renderVideos(videos) {
+            videoTableBody.innerHTML = ''; // Clear existing content
+
+            videos.forEach(video => {
+                const row = document.createElement("tr");
+                // The JSON has 'image_path', not 'images'
+                // Still limit to 16 if more are present, as per initial requirement
+                const displayedImages = video.image_path.slice(0, 16); 
+                const imagesHtml = displayedImages.map(image =>
+                    `<img src="YouCook2/video_frames/${image}" alt="视频截图" onclick="openModal('YouCook2/video_frames/${image}')">`
+                ).join('');
+                const shuffledImages = video.reorder_image_path.slice(0, 16); // Assuming 'shuffled_image_path' is the correct field
+                const shuffledImagesHtml = '<div class="shuffled-images">' + shuffledImages.map(image =>
+`<img src="YouCook2/video_frames/${image}" alt="打乱截图" onclick="openModal('YouCook2/video_frames/${image}')">`
+ ).join('') + '</div>';
+                const descriptionText = video.text ? video.text.join('<br>') : ''; // Use 'text' instead of 'description'
+                row.innerHTML = `
+                    <td>${video.id}</td>
+                    <td class="images-cell">
+                         ${imagesHtml}
+                         ${shuffledImagesHtml}
+                    </td>
+                    <td>${descriptionText}</td> `;
+                videoTableBody.appendChild(row);
+            });
+        }
+
+        function renderPaginationControls(totalItems) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            totalPagesSpan.innerText = totalPages;
+            totalItemsSpan.innerText = totalItems;
+            gotoPageInput.value = currentPage; // Update input to current page
+
+            // Disable/enable prev/next buttons
+            prevPageBtn.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
+
+            // Render page number buttons
+            pageNumbersSpan.innerHTML = '';
+            const maxPageButtons = 5; // Max number of page buttons to show
+            let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
+            let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
+
+            if (endPage - startPage + 1 < maxPageButtons) {
+                startPage = Math.max(1, endPage - maxPageButtons + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const button = document.createElement("button");
+                button.innerText = i;
+                button.classList.add('page-button');
+                if (i === currentPage) {
+                    button.classList.add('active-page');
+                }
+                button.onclick = () => goToPage(i);
+                pageNumbersSpan.appendChild(button);
+            }
+        }
+
+        // --- Pagination functions ---
+        function goToPage(page) {
+            currentPage = page;
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const paginatedVideos = currentFilteredVideos.slice(startIndex, startIndex + itemsPerPage);
+            renderVideos(paginatedVideos);
+            renderPaginationControls(currentFilteredVideos.length);
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                goToPage(currentPage - 1);
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(currentFilteredVideos.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                goToPage(currentPage + 1);
+            }
+        }
+
+        // --- Filter logic ---
+        function getFilteredVideos() {
+            const typeFilter = typeFilterSelect.value;
+            const subtypeFilter = subtypeFilterSelect.value;
+
+            return videoData.filter(video => {
+                const matchesType = typeFilter ? video.type === typeFilter : true;
+                const matchesSubtype = subtypeFilter ? video.subtype === subtypeFilter : true;
+                return matchesType && matchesSubtype;
+            });
+        }
+
+        function applyFilters() {
+            currentFilteredVideos = getFilteredVideos();
+            currentPage = 1; // Reset to the first page when filters change
+            goToPage(currentPage); // Render the first page of filtered results and update pagination
+        }
+
+        // --- Modal functions ---
+        function openModal(imageSrc) {
+            const modal = document.getElementById("imageModal");
+            const modalImage = document.getElementById("modalImage");
+            modalImage.src = imageSrc;
+            modal.style.display = "flex";
+        }
+
+        function closeModal() {
+            const modal = document.getElementById("imageModal");
+            modal.style.display = "none";
+        }
+
+        // --- Data Loading and Initial Render ---
+        async function loadVideoData() {
+            try {
+                // Fetch the JSON file generated by the Python script
+                const response = await fetch('youcook.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                videoData = data;
+                populateFilters(); // Populate filters after data is loaded
+                applyFilters(); // Initial render with loaded data
+            } catch (error) {
+                console.error("Error loading video data:", error);
+                alert("无法加载视频数据。请确保 'update.json' 文件存在于同一目录下，并且服务器已正确配置。");
+            }
+        }
+
+        // Initial data load when the page loads
+        loadVideoData();
+    </script>
+
+</body>
+</html>
