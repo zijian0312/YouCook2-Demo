@@ -344,11 +344,11 @@
                 // Still limit to 16 if more are present, as per initial requirement
                 const displayedImages = video.image_path.slice(0, 16); 
                 const imagesHtml = displayedImages.map(image =>
-                    `<img src="YouCook2/video_frames/${image}" alt="视频截图" onclick="openModal('YouCook2/video_frames/${image}')">`
+                    `<img src="YouCook2/${image}" alt="视频截图" onclick="openModal('YouCook2/${image}')">`
                 ).join('');
                 const shuffledImages = video.reorder_image_path.slice(0, 16); // Assuming 'shuffled_image_path' is the correct field
                 const shuffledImagesHtml = '<div class="shuffled-images">' + shuffledImages.map(image =>
-`<img src="YouCook2/video_frames/${image}" alt="打乱截图" onclick="openModal('YouCook2/video_frames/${image}')">`
+`<img src="YouCook2/${image}" alt="打乱截图" onclick="openModal('YouCook2/${image}')">`
  ).join('') + '</div>';
                 const descriptionText = video.text ? video.text.join('<br>') : ''; // Use 'text' instead of 'description'
                 row.innerHTML = `
