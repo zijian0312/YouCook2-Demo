@@ -345,8 +345,8 @@
         const prevPageBtn = document.getElementById("prevPageBtn");
         const nextPageBtn = document.getElementById("nextPageBtn");
         const pageNumbersSpan = document.getElementById("pageNumbers");
-        const typeFilterSelect = document.getElementById("typeFilter");
-        const subtypeFilterSelect = document.getElementById("subtypeFilter");
+        // const typeFilterSelect = document.getElementById("typeFilter");
+        // const subtypeFilterSelect = document.getElementById("subtypeFilter");
 
         const greedyAccuracy01Span = document.getElementById("greedyAccuracy01");
         const greedyAccuracyKendalltauSpan = document.getElementById("greedyAccuracyKendalltau");
@@ -358,31 +358,31 @@
 
         // --- Functions for filter population ---
         function populateFilters() {
-            const types = new Set();
-            const subtypes = new Set();
+            // const types = new Set();
+            // const subtypes = new Set();
 
-            videoData.forEach(video => {
-                types.add(video.type);
-                subtypes.add(video.subtype);
-            });
+            // videoData.forEach(video => {
+            //     types.add(video.type);
+            //     subtypes.add(video.subtype);
+            // });
 
-            // Populate Type filter
-            typeFilterSelect.innerHTML = '<option value="">所有类型</option>';
-            types.forEach(type => {
-                const option = document.createElement('option');
-                option.value = type;
-                option.textContent = type;
-                typeFilterSelect.appendChild(option);
-            });
+            // // Populate Type filter
+            // typeFilterSelect.innerHTML = '<option value="">所有类型</option>';
+            // types.forEach(type => {
+            //     const option = document.createElement('option');
+            //     option.value = type;
+            //     option.textContent = type;
+            //     typeFilterSelect.appendChild(option);
+            // });
 
-            // Populate Subtype filter (initially with all subtypes from all types)
-            subtypeFilterSelect.innerHTML = '<option value="">所有子类型</option>';
-            subtypes.forEach(subtype => {
-                const option = document.createElement('option');
-                option.value = subtype;
-                option.textContent = subtype;
-                subtypeFilterSelect.appendChild(option);
-            });
+            // // Populate Subtype filter (initially with all subtypes from all types)
+            // subtypeFilterSelect.innerHTML = '<option value="">所有子类型</option>';
+            // subtypes.forEach(subtype => {
+            //     const option = document.createElement('option');
+            //     option.value = subtype;
+            //     option.textContent = subtype;
+            //     subtypeFilterSelect.appendChild(option);
+            // });
         }
 
         // --- Event listeners ---
@@ -526,19 +526,19 @@
         }
 
         // --- Filter logic ---
-        function getFilteredVideos() {
-            const typeFilter = typeFilterSelect.value;
-            const subtypeFilter = subtypeFilterSelect.value;
+        // function getFilteredVideos() {
+        //     const typeFilter = typeFilterSelect.value;
+        //     const subtypeFilter = subtypeFilterSelect.value;
 
-            return videoData.filter(video => {
-                const matchesType = typeFilter ? video.type === typeFilter : true;
-                const matchesSubtype = subtypeFilter ? video.subtype === subtypeFilter : true;
-                return matchesType && matchesSubtype;
-            });
-        }
+        //     return videoData.filter(video => {
+        //         const matchesType = typeFilter ? video.type === typeFilter : true;
+        //         const matchesSubtype = subtypeFilter ? video.subtype === subtypeFilter : true;
+        //         return matchesType && matchesSubtype;
+        //     });
+        // }
 
         function applyFilters() {
-            currentFilteredVideos = getFilteredVideos();
+            currentFilteredVideos = videoData;
             currentPage = 1; // Reset to the first page when filters change
             goToPage(currentPage); // Render the first page of filtered results and update pagination
         }
