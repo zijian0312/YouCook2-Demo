@@ -206,11 +206,74 @@
             cursor: pointer;
             text-shadow: 0 0 5px rgba(0,0,0,0.5); /* Add shadow for visibility */
         }
+
+        .stats-container {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-wrap: wrap; /* 允许项目换行 */
+            /* 移除 justify-content: space-around; */ /* 移除或更改此行，因为我们希望它们在新行开始 */
+            gap: 15px; /* 项目之间的间距 */
+            /* 新增：设置一个最大宽度，或者使用 flex-basis 来强制换行 */
+            max-width:80%; /* 根据你的布局需求调整这个宽度，使其能容纳3个项目 */
+            margin-left: auto; /* 居中容器 */
+            margin-right: auto; /* 居中容器 */
+            justify-content: center; /* 使项目在容器内居中 */
+        }
+
+        .stat-item {
+            text-align: center;
+            /* flex: 1; */ /* 移除 flex: 1; 因为我们不想让它们平均分配空间，而是固定宽度 */
+            width: calc((100% / 4) - 10px); /* 设定每个项目的宽度，使其一行能显示3个，并考虑 gap */
+            /* (100% / 3) 是平均分三份，-10px 是因为有 gap: 15px，需要微调 */
+            min-width: 200px; /* 确保在小屏幕上也能良好显示，根据实际内容调整 */
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+        }
+
+        .stat-item strong {
+            display: block;
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .stat-item span {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #007bff;
+        }
     </style>
 </head>
 <body>
 
     <h1>YouCook2</h1>
+    <div class="stats-container" id="accuracyStats">
+        <div class="stat-item">
+            <strong>Greedy Accuracy 01:</strong> <span id="greedyAccuracy01"></span>
+        </div>
+        <div class="stat-item">
+            <strong>Greedy Accuracy Kendalltau:</strong> <span id="greedyAccuracyKendalltau"></span>
+        </div>
+        <div class="stat-item">
+            <strong>Greedy Accuracy Spearman:</strong> <span id="greedyAccuracySpearman"></span>
+        </div>
+        <div class="stat-item">
+            <strong>Optim Accuracy 01:</strong> <span id="optimAccuracy01"></span>
+        </div>
+        <div class="stat-item">
+            <strong>Optim Accuracy Kendalltau:</strong> <span id="optimAccuracyKendalltau"></span>
+        </div>
+        <div class="stat-item">
+            <strong>Optim Accuracy Spearman:</strong> <span id="optimAccuracySpearman"></span>
+        </div>
+    </div>
 
     <div class="filters">
         <div>
@@ -285,6 +348,13 @@
         const typeFilterSelect = document.getElementById("typeFilter");
         const subtypeFilterSelect = document.getElementById("subtypeFilter");
 
+        const greedyAccuracy01Span = document.getElementById("greedyAccuracy01");
+        const greedyAccuracyKendalltauSpan = document.getElementById("greedyAccuracyKendalltau");
+        const greedyAccuracySpearmanSpan = document.getElementById("greedyAccuracySpearman");
+        const optimAccuracy01Span = document.getElementById("optimAccuracy01");
+        const optimAccuracyKendalltauSpan = document.getElementById("optimAccuracyKendalltau");
+        const optimAccuracySpearmanSpan = document.getElementById("optimAccuracySpearman");
+
 
         // --- Functions for filter population ---
         function populateFilters() {
@@ -351,13 +421,52 @@
 `<img src="YouCook2/${image}" alt="打乱截图" onclick="openModal('YouCook2/${image}')">`
  ).join('') + '</div>';
                 const descriptionText = video.text ? video.text.join('<br>') : ''; // Use 'text' instead of 'description'
+
+                      // 构建要添加到描述中的额外信息
+                let additionalInfo = '';
+                if (video.order && video.order.length > 0) {
+                    additionalInfo += `<br><br><strong>Current Order:</strong> ${video.order.join(', ')}`;
+                }   
+                if (video.clip_order_greedy && video.clip_order_greedy.length > 0) {
+                    additionalInfo += `<br><br><strong>Greedy Order:</strong> ${video.clip_order_greedy.join(', ')}`;
+                }
+                if (video.clip_order_optimal && video.clip_order_optimal.length > 0) {
+                    additionalInfo += `<br><strong>Optimal Order:</strong> ${video.clip_order_optimal.join(', ')}`;
+                }
+                if (video.clip_score && video.clip_score.length > 0) {
+            // 修正部分：处理二维数组
+            const formattedScoreRows = video.clip_score.map(rowOfScores => {
+                // 确保 rowOfScores 是一个数组
+                if (Array.isArray(rowOfScores)) {
+                    const formattedIndividualScores = rowOfScores.map(score => {
+                        const numericScore = parseFloat(score); // 尝试将值转换为浮点数
+                        if (!isNaN(numericScore)) { // 检查转换后的值是否是有效数字
+                            return numericScore.toFixed(4); // 如果是，则格式化
+                        } else {
+                            return 'N/A'; // 如果不是有效数字，显示 'N/A' 或其他占位符
+                        }
+                    });
+                    return `[${formattedIndividualScores.join(', ')}]`; // 将子数组格式化为 "[score1, score2, ...]"
+                } else {
+                    // 如果某个元素不是数组，作为兜底处理
+                    const numericScore = parseFloat(rowOfScores);
+                    if (!isNaN(numericScore)) {
+                         return numericScore.toFixed(4);
+                    } else {
+                         return 'N/A';
+                    }
+                }
+            });
+            additionalInfo += `<br><strong>Clip Scores:</strong><br>${formattedScoreRows.join('<br>')}`;
+        }
+
                 row.innerHTML = `
                     <td>${video.id}</td>
                     <td class="images-cell">
                          ${imagesHtml}
                          ${shuffledImagesHtml}
                     </td>
-                    <td>${descriptionText}</td> `;
+                    <td>${descriptionText}${additionalInfo}</td> `;
                 videoTableBody.appendChild(row);
             });
         }
@@ -456,7 +565,28 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
-                videoData = data;
+
+                  // 填充准确度数据
+                if (data.greedy_accuracy_01 !== undefined) {
+                    greedyAccuracy01Span.textContent = data.greedy_accuracy_01.toFixed(2) + '%'; // 保留两位小数并添加百分号
+                }
+                if (data.greedy_accuracy_kendalltau !== undefined) {
+                    greedyAccuracyKendalltauSpan.textContent = data.greedy_accuracy_kendalltau.toFixed(2) + '%';
+                }
+                if (data.greedy_accuracy_spearman !== undefined) {
+                    greedyAccuracySpearmanSpan.textContent = data.greedy_accuracy_spearman.toFixed(2) + '%';
+                }
+                if (data.optim_accuracy_01 !== undefined) {
+                    optimAccuracy01Span.textContent = data.optim_accuracy_01.toFixed(2) + '%';
+                }
+                if (data.optim_accuracy_kendalltau !== undefined) {
+                    optimAccuracyKendalltauSpan.textContent = data.optim_accuracy_kendalltau.toFixed(2) + '%';
+                }
+                if (data.optim_accuracy_spearman !== undefined) {
+                    optimAccuracySpearmanSpan.textContent = data.optim_accuracy_spearman.toFixed(2) + '%';
+                }
+
+                videoData = data.data;
                 populateFilters(); // Populate filters after data is loaded
                 applyFilters(); // Initial render with loaded data
             } catch (error) {
